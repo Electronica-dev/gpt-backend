@@ -1,24 +1,19 @@
 const { Configuration, OpenAIApi } = require("openai");
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors');
+
 dotenv.config();
 
 const app = express()
 
+app.use(cors())
 app.use(express.json())
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
-
-app.get('/api/test', (req, res) => {
-  res.send('api test succeeded')
-})
-
-app.post('/api/testPost', (req, res) => {
-  res.send(`testPost, ${req.body.text}`)
-})
 
 app.post('/api/generate', async (req, res) => {
   const models = await openai.listModels();
@@ -32,11 +27,12 @@ app.post('/api/generate', async (req, res) => {
   }
 
   try {
-    const completion = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: req.body.text,
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [{"role": "user", "content": req.body.text}],
+      // prompt: req.body.text,
       temperature: 0.6,
-      max_tokens: 100,
+      max_tokens: 200,
     });
     res.status(200).json({ result: completion.data.choices[0] });
   } catch(error) {
@@ -53,8 +49,6 @@ app.post('/api/generate', async (req, res) => {
       });
     }
   }
-  // console.log(JSON.stringify(models))
-  // res.status(200);
 })
 
 
